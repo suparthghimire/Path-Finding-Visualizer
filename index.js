@@ -243,12 +243,16 @@ function calcPath(finalNode, visited) {
 
 function drawPath(allParents, data) {
   setTimeout(function () {
-    document.getElementById(allParents[data].name).classList.add("path");
-    pathLength++;
-    document.querySelector("#path-length").innerText = pathLength;
-    document.querySelector("#status").innerText = "Idle";
-    document.querySelector(".start").classList.add("path");
-    document.querySelector(".end").classList.add("path");
+    if (allParents[data] == undefined || allParents[data].name == null) {
+      clearInterval();
+    } else {
+      document.getElementById(allParents[data].name).classList.add("path");
+      pathLength++;
+      document.querySelector("#path-length").innerText = pathLength;
+      document.querySelector("#status").innerText = "Idle";
+      document.querySelector(".start").classList.add("path");
+      document.querySelector(".end").classList.add("path");
+    }
   }, 200 * data);
 
   setTimeout(() => {
