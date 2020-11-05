@@ -340,7 +340,25 @@ function calcNeighbour(startNode) {
   };
 }
 
-document.querySelector("#start_algo").addEventListener("click", A_Star);
+document.querySelector("#start_algo").addEventListener("click", () => {
+  let status = false;
+  document.querySelectorAll(".grid").forEach((grid) => {
+    if (
+      grid.classList.contains("traverse") ||
+      grid.classList.contains("path")
+    ) {
+      status = true;
+    } else {
+      status = false;
+    }
+  });
+  if (status) {
+    drawGrid();
+    A_Star();
+  } else {
+    A_Star();
+  }
+});
 
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -381,6 +399,7 @@ function traverse(startNode) {
 }
 
 document.querySelector("#reset_board").addEventListener("click", drawGrid);
+
 document.querySelector("#overlay-close").addEventListener("click", () => {
   document.querySelector(".overlay").style.visibility = "hidden";
 });
