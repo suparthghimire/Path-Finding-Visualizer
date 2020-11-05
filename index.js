@@ -381,3 +381,10 @@ function traverse(startNode) {
 }
 
 document.querySelector("#reset_board").addEventListener("click", drawGrid);
+document.querySelector("#overlay-close").addEventListener("click", () => {
+  document.querySelector(".overlay").style.visibility = "hidden";
+});
+
+document.querySelector(".help").addEventListener("click", () => {
+  document.querySelector(".overlay").style.visibility = "visible";
+});

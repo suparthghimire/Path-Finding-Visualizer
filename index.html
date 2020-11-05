@@ -11,18 +11,35 @@
 <body>
     <div class="status">
         <h2 class="banner">Status</h2>
+        <button class="help">Help</button>
         <p class="about-status">Algorithm Status: <span id="status">Running</span></p>
         <p class="about_path">Path Length: <span id="path-length">12</span></p>
         <p class="about-visited">Visited Nodes: <span id="visited-nodes">40</span></p>
         <button class="reset-btn" id="reset_board">Reset Board</button>
-
     </div>
+
     <div class="container">
         <h1> Implementing A*</h1>
         <button id="start_algo">Start A*</button>
     </div>
     <div class="grid-container">
+    </div>
 
+    <div class="overlay">
+
+        <div class="overlay-container">
+            <button class="close" id="overlay-close">x</button>
+            <h2 class="overlay-title">Help Section</h2>
+            <hr>
+            <p class="overlay-subtitle">Thankyou for Using this Visualizer. Here are some Helpful tips to navigate through the app</p>
+            <hr>
+            <ul class="help-list">
+                <li class="help-item">Click on Start A* to Start the Visualization</li>
+                <li class="help-item">To Change location of start or end node, Click on either of them and click on any other green area of the grid</li>
+                <li class="help-item">The Status Box shows the Status of Algorhthm, length of path, and total number of visited nodes</li>
+
+            </ul>
+        </div>
     </div>
 </body>
 <script src="index.js"></script>
