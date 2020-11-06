@@ -185,7 +185,15 @@ function drawPath() {
 }
 
 document.querySelector("#reset_board").addEventListener("click", drawGrid);
+document.querySelector(".overlay").style.visibility = "visible";
 
+document.querySelector(".help").addEventListener("click", () => {
+  document.querySelector(".overlay").style.visibility = "visible";
+});
+
+document.querySelector("#overlay-close").addEventListener("click", () => {
+  document.querySelector(".overlay").style.visibility = "hidden";
+});
 // A Star Codes
 function A_Star() {
   console.log("Start", startNode);
@@ -420,6 +428,7 @@ function calcHCost(node) {
   const y2 = Math.floor(parseInt(endNode.name) / 16);
   const xdis = (x2 - x1) * (x2 - x1);
   const ydis = (y2 - y1) * (y2 - y1);
+
   return Math.sqrt(xdis + ydis);
 }
 
