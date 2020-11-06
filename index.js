@@ -2,10 +2,49 @@ const gridContainer = document.querySelector(".grid-container");
 const dim = 16;
 let totalVisited = 0;
 let pathLength = 0;
+let allNodes = [];
+let startNode = null;
+let endNode = null;
+
+let exploringNodes = [];
+let visitedNodes = [];
+let finalPath = [];
+let nodeBeingExplored = null;
+class Node {
+  constructor(name, gn, hn, parent, isEnd, isStart, isObstacle) {
+    this.name = name;
+    this.gn = gn;
+    this.hn = hn;
+    this.fn = null;
+    this.parent = parent;
+    this.end = isEnd;
+    this.start = isStart;
+    this.obstacle = isObstacle;
+  }
+  calc() {
+    return this.gn + this.hn;
+  }
+}
 
 drawGrid();
 
 function drawGrid() {
+  console.clear();
+  console.log(allNodes);
+  allNodes = [];
+  exploringNodes = [];
+  visitedNodes = [];
+  finalPath = [];
+  nodeBeingExplored = null;
+  totalVisited = 0;
+  pathLength = 0;
+
+  document.querySelector("#path-length").innerText = pathLength;
+  document.querySelector("#visited-nodes").innerText = totalVisited;
+
+  console.log(allNodes);
+  document.querySelector("#reset_board").disabled = false;
+  // console.log("allNodes: ", allNodes);
   document.querySelector(".grid-container").innerHTML = "";
   let count = 0;
   for (let i = 0; i < dim; i++) {
@@ -15,30 +54,46 @@ function drawGrid() {
       // span.innerHTML = count;
       span.id = count;
       gridContainer.appendChild(span);
+      allNodes.push(new Node(count, null, null, null, false, false, false));
       count++;
     }
   }
-  const start = setStartAndEndNode().startNode.toString();
-  const end = setStartAndEndNode().endNode.toString();
-  // console.log(startNode, endNode);
-
-  document.getElementById(`${start}`).classList.add("start");
-  document.getElementById(`${end}`).classList.add("end");
-
-  document.querySelector("#status").innerText = "Idle";
-  document.querySelector("#path-length").innerText = 0;
-  document.querySelector("#visited-nodes").innerText = 0;
+  setStartAndEndNode();
 }
 
+function traverse(node) {
+  node = node.toString();
+  document.getElementById(`${node}`).classList.add("traverse");
+}
 function setStartAndEndNode() {
-  let startNode = Math.floor(Math.random() * 255);
-  let endNode = Math.floor(Math.random() * 255);
+  let start = Math.floor(Math.random() * 255);
+  let end = Math.floor(Math.random() * 255);
 
-  if (startNode == endNode) {
-    setStartAndEndNode();
-  }
-  return { startNode, endNode };
+  document.getElementById(start).classList.add("start");
+  startNode = allNodes.find((node) => node.name === start);
+  startNode.start = true;
+  console.log("start ", startNode);
+
+  document.getElementById(end).classList.add("end");
+  endNode = allNodes.find((node) => node.name === end);
+  endNode.end = true;
+  console.log("end ", endNode);
 }
+
+gridContainer.addEventListener("click", (e) => {
+  const obsCheckBox = document.querySelector("#add_obstacle");
+  if (e.target.classList.contains("grid")) {
+    if (
+      obsCheckBox.checked &&
+      !e.target.classList.contains("start") &&
+      !e.target.classList.contains("end")
+    ) {
+      e.target.classList.toggle("obstacle");
+      let obstacleNode = allNodes.find((node) => node.name == e.target.id);
+      obstacleNode.obstacle = !obstacleNode.obstacle;
+    }
+  }
+});
 
 gridContainer.addEventListener("click", (e) => {
   if (e.target.classList.contains("grid")) {
@@ -55,12 +110,20 @@ function setNewStartLocation(oldStart) {
   gridContainer.addEventListener(
     "click",
     (e) => {
-      if (
-        e.target.classList.contains("grid") &&
-        !e.target.classList.contains("end")
-      ) {
-        oldStart.classList.remove("start");
-        e.target.classList.add("start");
+      if (!e.target.classList.contains("obstacle")) {
+        if (
+          e.target.classList.contains("grid") &&
+          !e.target.classList.contains("end")
+        ) {
+          oldStart.classList.remove("start");
+          e.target.classList.add("start");
+          let oldStartNode = allNodes.find((node) => node.name == oldStart.id);
+          oldStartNode.start = false;
+          startNode = allNodes.find((node) => node.name == e.target.id);
+
+          startNode.start = true;
+          document.getElementById(startNode.name).classList.add("start");
+        }
       }
     },
     { once: true }
@@ -70,261 +133,250 @@ function setNewEndLocation(oldEnd) {
   gridContainer.addEventListener(
     "click",
     (e) => {
-      if (
-        e.target.classList.contains("grid") &&
-        !e.target.classList.contains("start")
-      ) {
-        oldEnd.classList.remove("end");
-        e.target.classList.add("end");
+      if (!e.target.classList.contains("obstacle")) {
+        if (
+          e.target.classList.contains("grid") &&
+          !e.target.classList.contains("start")
+        ) {
+          oldEnd.classList.remove("end");
+          e.target.classList.add("end");
+          let oldEndNode = allNodes.find((node) => node.name == oldEnd.id);
+          oldEndNode.end = false;
+
+          endNode = allNodes.find((node) => node.name == e.target.id);
+          endNode.end = true;
+          document.getElementById(endNode.name).classList.add("end");
+        }
       }
     },
     { once: true }
   );
 }
 
-function h_cost(startNode, endNode) {
-  const x1 = mod(startNode, 16);
-  const y1 = Math.floor(startNode / 16);
-  const x2 = mod(endNode, 16);
-  const y2 = Math.floor(endNode / 16);
-
-  const xdis = (x2 - x1) * (x2 - x1);
-  const ydis = (y2 - y1) * (y2 - y1);
-
-  return Math.sqrt(xdis + ydis);
-}
-
-class Node {
-  constructor(name, gn, hn, parent) {
-    this.name = name;
-    this.gn = gn;
-    this.hn = hn;
-    this.fn = this.gn + this.hn;
-    this.parent = parent;
+function traversePath(node, key) {
+  if (node[key] == null) {
+    return;
+  } else {
+    traversePath(node[key], key);
+    let keyName = node[key].name.toString();
+    finalPath.push(keyName);
   }
 }
+function fillPath(data) {
+  document.getElementById(startNode.name).classList.add("path");
+  document.getElementById(endNode.name).classList.add("path");
+  setTimeout(() => {
+    document.getElementById(finalPath[data]).classList.add("path");
+    pathLength++;
+    document.querySelector("#path-length").innerText = pathLength;
+  }, 200 * data);
+  const time = 200 * parseInt(data);
+}
 
+function drawPath() {
+  document.querySelector("#reset_board").disabled = false;
+
+  let finalNode = exploringNodes.find((node) => node.name == endNode.name);
+
+  traversePath(finalNode, "parent");
+
+  console.log(finalPath);
+  for (let i = 0; i < finalPath.length; i++) fillPath(i);
+}
+
+document.querySelector("#reset_board").addEventListener("click", drawGrid);
+
+// A Star Codes
 function A_Star() {
-  let start = document.querySelector(".start").id;
-  let end = document.querySelector(".start").id;
+  console.log("Start", startNode);
+  console.log("Start", endNode);
 
-  let startNodeName = start;
+  let startNodePtr = startNode;
 
-  let exploringList = [];
-  let visited = [];
+  startNode.gn = calcGCost(startNode.name);
+  startNode.hn = calcHCost(startNode.name);
+  startNode.fn = calcFCost(startNode);
 
-  let startNode = new Node(
-    start,
-    0,
-    h_cost(parseInt(start), parseInt(end), null)
-  );
-
-  exploringList.push(startNode);
+  exploringNodes.push(startNodePtr);
+  visitedNodes.push(startNodePtr);
 
   let animate = setInterval(() => {
-    document.querySelector("#status").innerText = "Running";
+    document.querySelector("#reset_board").disabled = true;
 
-    if (document.getElementById(start).classList.contains("end")) {
-      console.log("found");
-      calcPath(exploringList[0], visited);
+    if (document.getElementById(startNodePtr.name).classList.contains("end")) {
       clearInterval(animate);
+      console.log("found");
+      drawPath();
+      // break;
     } else {
-      let left_int = calcNeighbour(parseInt(start)).left;
-      let right_int = calcNeighbour(parseInt(start)).right;
-      let top_int = calcNeighbour(parseInt(start)).top;
-      let bottom_int = calcNeighbour(parseInt(start)).bottom;
+      let top = allNodes.find(
+        (node) => node.name == findNeighbours(startNodePtr).top
+      );
+      let right = allNodes.find(
+        (node) => node.name == findNeighbours(startNodePtr).right
+      );
+      let bottom = allNodes.find(
+        (node) => node.name == findNeighbours(startNodePtr).bottom
+      );
+      let left = allNodes.find(
+        (node) => node.name == findNeighbours(startNodePtr).left
+      );
+      setGCost(top, right, bottom, left);
+      setHCost(top, right, bottom, left);
+      setFnCost(top, right, bottom, left);
+      updateExploringList(top, right, left, bottom, startNodePtr);
 
-      let left = left_int == null ? null : left_int.toString();
-      let right = right_int == null ? null : right_int.toString();
-      let top = top_int == null ? null : top_int.toString();
-      let bottom = bottom_int == null ? null : bottom_int.toString();
+      exploringNodes.sort((a, b) => a.fn - b.fn);
 
-      if (left != null && !checkVisited(visited, left)) {
-        let g_cost = calcGCost(parseInt(start), parseInt(left));
-        let leftNode = new Node(
-          left,
-          g_cost,
-          h_cost(parseInt(left), parseInt(end)),
-          start
-        );
-        if (
-          exploringList.filter((node) => node.name === leftNode.name).length ===
-          0
-        ) {
-          exploringList.push(leftNode);
-        }
-      }
+      let nodeBeingExplored = exploringNodes.shift();
 
-      if (right != null && !checkVisited(visited, right)) {
-        let g_cost = calcGCost(parseInt(start), parseInt(right));
-        let rightNode = new Node(
-          right,
-          g_cost,
-          h_cost(parseInt(right), parseInt(end)),
-          start
-        );
-        if (
-          exploringList.filter((node) => node.name === rightNode.name)
-            .length === 0
-        ) {
-          exploringList.push(rightNode);
-        }
-      }
+      const status = visitedNodes.filter(
+        (node) => node.name == nodeBeingExplored.name
+      ).length;
+      if (status == 0) visitedNodes.push(nodeBeingExplored);
 
-      if (top != null && !checkVisited(visited, top)) {
-        let g_cost = calcGCost(parseInt(start), parseInt(top));
-        let topNode = new Node(
-          top,
-          g_cost,
-          h_cost(parseInt(top), parseInt(end)),
-          start
-        );
-        if (
-          exploringList.filter((node) => node.name === topNode.name).length ===
-          0
-        ) {
-          exploringList.push(topNode);
-        }
-      }
-      if (bottom != null && !checkVisited(visited, bottom)) {
-        let g_cost = calcGCost(parseInt(start), parseInt(bottom));
-        let bottomNode = new Node(
-          bottom,
-          g_cost,
-          h_cost(parseInt(bottom), parseInt(end)),
-          start
-        );
-        if (
-          exploringList.filter((node) => node.name === bottomNode.name)
-            .length === 0
-        ) {
-          exploringList.push(bottomNode);
-        }
-      }
+      startNodePtr = exploringNodes[0];
+      traverse(startNodePtr.name);
+      document.querySelector("#visited-nodes").innerText = totalVisited;
 
-      visited.push(exploringList.shift());
-      let nextNode = exploringList[0];
-
-      traverse(start);
-
-      startNode = nextNode;
-      start = nextNode.name;
+      totalVisited++;
     }
   }, 50);
-  document.querySelectorAll(".grid").forEach((btn) => {
-    btn.disabled = true;
-  });
-
-  document.querySelector("#reset_board").disabled = true;
+}
+function checkVisited(node) {
+  return visitedNodes.includes(node) ? true : false;
 }
 
-function calcPath(finalNode, visited) {
-  console.log("Visited");
-
-  let parent = visited.find((node) => node.name === finalNode.parent);
-  // console.log(parent);
-  let allParents = [];
-
-  visited.forEach((node) => {
-    if (finalNode == undefined) return;
-    let selected = visited.find((node) => node.name === finalNode.parent); ///222
-    finalNode = selected;
-    allParents.unshift(selected);
-  });
-
-  for (let i = 0; i < allParents.length; i++) drawPath(allParents, i);
-}
-
-function drawPath(allParents, data) {
-  setTimeout(function () {
-    if (allParents[data] == undefined || allParents[data].name == null) {
-      clearInterval();
-    } else {
-      document.getElementById(allParents[data].name).classList.add("path");
-      pathLength++;
-      document.querySelector("#path-length").innerText = pathLength;
-      document.querySelector("#status").innerText = "Idle";
-      document.querySelector(".start").classList.add("path");
-      document.querySelector(".end").classList.add("path");
+function updateExploringList(top, right, left, bottom, parent) {
+  if (top != null && !checkVisited(top)) {
+    top.parent = parent;
+    const status = exploringNodes.filter((node) => node.name === top.name)
+      .length;
+    if (status == 0) {
+      exploringNodes.push(top);
     }
-  }, 200 * data);
-
-  setTimeout(() => {
-    document.querySelector("#reset_board").disabled = false;
-  }, 500);
-}
-
-function calcGCost(startNode, currentNode) {
-  const x1 = mod(startNode, 16);
-  const y1 = Math.floor(startNode / 16);
-  const x2 = mod(currentNode, 16);
-  const y2 = Math.floor(currentNode / 16);
-  return Math.abs(y2 - y1) + Math.abs(x2 - x1);
-}
-
-function checkVisited(visited, nodeName) {
-  if (visited.filter((node) => node.name === nodeName).length === 0) {
-    return false;
   }
-  return true;
+  if (right != null && !checkVisited(right)) {
+    right.parent = parent;
+    const status = exploringNodes.filter((node) => node.name === right.name)
+      .length;
+    if (status == 0) {
+      exploringNodes.push(right);
+    }
+  }
+  if (bottom != null && !checkVisited(bottom)) {
+    bottom.parent = parent;
+    const status = exploringNodes.filter((node) => node.name === bottom.name)
+      .length;
+    if (status == 0) {
+      exploringNodes.push(bottom);
+    }
+  }
+  if (left != null && !checkVisited(left)) {
+    left.parent = parent;
+    const status = exploringNodes.filter((node) => node.name === left.name)
+      .length;
+    if (status == 0) {
+      exploringNodes.push(left);
+    }
+  }
 }
 
-function calcNeighbour(startNode) {
-  // check for boundry conditions
+function setFnCost(top, right, bottom, left) {
+  if (top != undefined) {
+    top.fn = calcFCost(top);
+  }
+  if (right != undefined) {
+    right.fn = calcFCost(right);
+  }
+  if (bottom != undefined) {
+    bottom.fn = calcFCost(bottom);
+  }
+  if (left != undefined) {
+    left.fn = calcFCost(left);
+  }
+}
+function setGCost(top, right, bottom, left) {
+  if (top != undefined) {
+    top.gn = calcGCost(top.name);
+  }
+  if (right != undefined) {
+    right.gn = calcGCost(right.name);
+  }
+  if (bottom != undefined) {
+    bottom.gn = calcGCost(bottom.name);
+  }
+  if (left != undefined) {
+    left.gn = calcGCost(left.name);
+  }
+}
+function setHCost(top, right, bottom, left) {
+  if (top != undefined) {
+    top.hn = calcHCost(top.name);
+  }
+  if (right != undefined) {
+    right.hn = calcHCost(right.name);
+  }
+  if (bottom != undefined) {
+    bottom.hn = calcHCost(bottom.name);
+  }
+  if (left != undefined) {
+    left.hn = calcHCost(left.name);
+  }
+}
+function isObstacle(node) {
+  return document.getElementById(node.name).classList.contains("obstacle")
+    ? true
+    : false;
+}
+
+function findNeighbours(node) {
   let left, right, top, bottom;
-  if (startNode == 0) {
-    // top-left
-    right = startNode + 1;
-    bottom = startNode + 16;
+  if (parseInt(node.name) == 0) {
     top = null;
+    right = parseInt(node.name) + 1;
     left = null;
-  } else if (startNode == 15) {
-    // top-right
-    left = startNode - 1;
-    bottom = startNode + 16;
+    bottom = parseInt(node.name) + 16;
+  } else if (parseInt(node.name) == 15) {
     top = null;
     right = null;
-  } else if (startNode == 240) {
-    // bottom-left
-    top = startNode - 16;
-    right = startNode + 1;
+    left = parseInt(node.name) - 1;
+    bottom = parseInt(node.name) + 16;
+  } else if (parseInt(node.name) == 240) {
+    top = parseInt(node.name) - 16;
+    right = parseInt(node.name) + 1;
     left = null;
     bottom = null;
-  } else if (startNode == 255) {
-    // bottom-right
-    top = startNode - 16;
-    left = startNode - 1;
+  } else if (parseInt(node.name) == 255) {
+    top = parseInt(node.name) - 16;
     right = null;
-    left = null;
-  } else if (createBoundry().top.includes(startNode)) {
-    // top boundry
-    top = null;
-    left = startNode - 1;
-    bottom = startNode + 16;
-    right = startNode + 1;
-  } else if (createBoundry().bottom.includes(startNode)) {
-    // bottom boundry
+    left = parseInt(node.name) - 1;
     bottom = null;
-    top = startNode - 16;
-    left = startNode - 1;
-    right = startNode + 1;
-  } else if (createBoundry().left.includes(startNode)) {
-    // left boundry
+  } else if (createBoundry().top.includes(parseInt(node.name))) {
+    top = null;
+    right = parseInt(node.name) + 1;
+    left = parseInt(node.name) - 1;
+    bottom = parseInt(node.name) + 16;
+  } else if (createBoundry().bottom.includes(parseInt(node.name))) {
+    top = parseInt(node.name) - 16;
+    right = parseInt(node.name) + 1;
+    left = parseInt(node.name) - 1;
+    bottom = null;
+  } else if (createBoundry().left.includes(parseInt(node.name))) {
+    top = parseInt(node.name) - 16;
+    right = parseInt(node.name) + 1;
     left = null;
-    bottom = startNode + 16;
-    top = startNode - 16;
-    right = startNode + 1;
-  } else if (createBoundry().right.includes(startNode)) {
-    // right boundry
+    bottom = parseInt(node.name) + 16;
+  } else if (createBoundry().right.includes(parseInt(node.name))) {
+    top = parseInt(node.name) - 16;
     right = null;
-    top = startNode - 16;
-    left = startNode - 1;
-    bottom = startNode + 16;
+    left = parseInt(node.name) - 1;
+    bottom = parseInt(node.name) + 16;
   } else {
-    right = startNode + 1;
-    top = startNode - 16;
-    left = startNode - 1;
-    bottom = startNode + 16;
+    right = parseInt(node.name) + 1;
+    top = parseInt(node.name) - 16;
+    left = parseInt(node.name) - 1;
+    bottom = parseInt(node.name) + 16;
   }
   return {
     top,
@@ -333,31 +385,6 @@ function calcNeighbour(startNode) {
     right,
   };
 }
-
-document.querySelector("#start_algo").addEventListener("click", () => {
-  let status = false;
-  document.querySelectorAll(".grid").forEach((grid) => {
-    if (
-      grid.classList.contains("traverse") ||
-      grid.classList.contains("path")
-    ) {
-      status = true;
-    } else {
-      status = false;
-    }
-  });
-  if (status) {
-    drawGrid();
-    A_Star();
-  } else {
-    A_Star();
-  }
-});
-
-function mod(n, m) {
-  return ((n % m) + m) % m;
-}
-
 function createBoundry() {
   let left = [];
   let right = [];
@@ -386,18 +413,49 @@ function createBoundry() {
     bottom,
   };
 }
-function traverse(startNode) {
-  totalVisited++;
-  document.getElementById(`${startNode}`).classList.add("traverse");
-  document.querySelector("#visited-nodes").innerText = totalVisited;
+function calcHCost(node) {
+  const x1 = mod(parseInt(node), 16);
+  const y1 = Math.floor(parseInt(node) / 16);
+  const x2 = mod(parseInt(endNode.name), 16);
+  const y2 = Math.floor(parseInt(endNode.name) / 16);
+  const xdis = (x2 - x1) * (x2 - x1);
+  const ydis = (y2 - y1) * (y2 - y1);
+  return Math.sqrt(xdis + ydis);
 }
 
-document.querySelector("#reset_board").addEventListener("click", drawGrid);
+function calcGCost(currentNode) {
+  const x1 = mod(parseInt(startNode.name), 16);
+  const y1 = Math.floor(parseInt(startNode.name) / 16);
+  const x2 = mod(parseInt(currentNode), 16);
+  const y2 = Math.floor(parseInt(currentNode) / 16);
+  return Math.abs(y2 - y1) + Math.abs(x2 - x1);
+}
 
-document.querySelector("#overlay-close").addEventListener("click", () => {
-  document.querySelector(".overlay").style.visibility = "hidden";
+function calcFCost(currentNode) {
+  return currentNode.gn + currentNode.hn;
+}
+
+document.querySelector("#start_algo").addEventListener("click", () => {
+  let status = false;
+  document.querySelectorAll(".grid").forEach((grid) => {
+    if (
+      grid.classList.contains("traverse") ||
+      grid.classList.contains("path")
+    ) {
+      console.log("true");
+      status = true;
+    } else {
+      status = false;
+    }
+  });
+  if (status) {
+    drawGrid();
+    // A_Star();
+  } else {
+    A_Star();
+  }
 });
 
-document.querySelector(".help").addEventListener("click", () => {
-  document.querySelector(".overlay").style.visibility = "visible";
-});
+function mod(n, m) {
+  return ((n % m) + m) % m;
+}
