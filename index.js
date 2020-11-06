@@ -220,7 +220,6 @@ function A_Star() {
 
 function calcPath(finalNode, visited) {
   console.log("Visited");
-  visited.sort((a, b) => parseInt(a.name) - parseInt(b.name));
 
   let parent = visited.find((node) => node.name === finalNode.parent);
   // console.log(parent);
@@ -230,12 +229,7 @@ function calcPath(finalNode, visited) {
     if (finalNode == undefined) return;
     let selected = visited.find((node) => node.name === finalNode.parent); ///222
     finalNode = selected;
-    allParents.push(selected);
-  });
-
-  visited.forEach((node, i) => {
-    let selected = visited.find((element) => element.name === parent.parent);
-    allParents.push(selected.name);
+    allParents.unshift(selected);
   });
 
   for (let i = 0; i < allParents.length; i++) drawPath(allParents, i);
