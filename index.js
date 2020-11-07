@@ -234,19 +234,22 @@ function A_Star() {
       setFnCost(top, right, bottom, left);
       updateExploringList(top, right, left, bottom, startNodePtr);
 
+      const status = visitedNodes.filter(
+        (node) => node.name == startNodePtr.name
+      ).length;
+      if (status == 0) visitedNodes.push(startNodePtr);
+
+      exploringNodes.shift();
       exploringNodes.sort((a, b) => a.fn - b.fn);
 
-      let nodeBeingExplored = exploringNodes.shift();
-
-      const status = visitedNodes.filter(
-        (node) => node.name == nodeBeingExplored.name
-      ).length;
-      if (status == 0) visitedNodes.push(nodeBeingExplored);
-
+      for (let i = exploringNodes.length - 1; i--; ) {
+        if (exploringNodes[i].obstacle == true) {
+          exploringNodes.splice(i, 1);
+        }
+      }
       startNodePtr = exploringNodes[0];
       traverse(startNodePtr.name);
       document.querySelector("#visited-nodes").innerText = totalVisited;
-
       totalVisited++;
     }
   }, 50);
