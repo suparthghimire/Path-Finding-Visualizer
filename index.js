@@ -11,7 +11,7 @@ let visitedNodes = [];
 let finalPath = [];
 let nodeBeingExplored = null;
 class Node {
-  constructor(name, gn, hn, parent, isEnd, isStart, isObstacle) {
+  constructor(name, gn, hn, parent, isEnd, isStart, isObstacle, neighbours) {
     this.name = name;
     this.gn = gn;
     this.hn = hn;
@@ -20,6 +20,7 @@ class Node {
     this.end = isEnd;
     this.start = isStart;
     this.obstacle = isObstacle;
+    this.neighbours = neighbours;
   }
   calc() {
     return this.gn + this.hn;
@@ -51,10 +52,12 @@ function drawGrid() {
     for (let j = 0; j < dim; j++) {
       const span = document.createElement("button");
       span.classList.add("grid");
-      // span.innerHTML = count;
+      span.innerHTML = count;
       span.id = count;
       gridContainer.appendChild(span);
-      allNodes.push(new Node(count, null, null, null, false, false, false));
+      allNodes.push(
+        new Node(count, null, null, null, false, false, false, null)
+      );
       count++;
     }
   }
@@ -170,7 +173,8 @@ function fillPath(data) {
     pathLength++;
     document.querySelector("#path-length").innerText = pathLength;
   }, 200 * data);
-  const time = 200 * parseInt(data);
+
+  console.log(allNodes);
 }
 
 function drawPath() {
@@ -208,15 +212,19 @@ function A_Star() {
   exploringNodes.push(startNodePtr);
   visitedNodes.push(startNodePtr);
 
+  let count = 0;
+
   let animate = setInterval(() => {
     document.querySelector("#reset_board").disabled = true;
 
-    if (document.getElementById(startNodePtr.name).classList.contains("end")) {
+    if (startNodePtr.end == true) {
       clearInterval(animate);
-      console.log("found");
       drawPath();
-      // break;
+      console.log("found");
+      //  break;
     } else {
+      console.log("Start Node ", startNodePtr.name);
+
       let top = allNodes.find(
         (node) => node.name == findNeighbours(startNodePtr).top
       );
@@ -229,6 +237,8 @@ function A_Star() {
       let left = allNodes.find(
         (node) => node.name == findNeighbours(startNodePtr).left
       );
+
+      startNodePtr.neighbours = [top, right, bottom, left];
       setGCost(top, right, bottom, left);
       setHCost(top, right, bottom, left);
       setFnCost(top, right, bottom, left);
@@ -241,16 +251,25 @@ function A_Star() {
 
       exploringNodes.shift();
       exploringNodes.sort((a, b) => a.fn - b.fn);
+      // console.log("top.name: ", top != null ? top.name : "");
+      // console.log("right.name: ", right != null ? right.name : "");
+      // console.log("bottom.name: ", bottom != null ? bottom.name : "");
+      // console.log("left.name: ", left != null ? left.name : "");
 
-      for (let i = exploringNodes.length - 1; i--; ) {
-        if (exploringNodes[i].obstacle == true) {
-          exploringNodes.splice(i, 1);
+      for (let j = exploringNodes.length - 1; j--; ) {
+        if (exploringNodes[j].obstacle == true) {
+          exploringNodes.splice(j, 1);
         }
       }
-      startNodePtr = exploringNodes[0];
+
+      console.log(exploringNodes[0].name);
+
       traverse(startNodePtr.name);
+
+      startNodePtr = exploringNodes[0];
       document.querySelector("#visited-nodes").innerText = totalVisited;
       totalVisited++;
+      count++;
     }
   }, 50);
 }
@@ -342,6 +361,7 @@ function isObstacle(node) {
 }
 
 function findNeighbours(node) {
+  // console.log("Node to find Neigh of: ", node.name);
   let left, right, top, bottom;
   if (parseInt(node.name) == 0) {
     top = null;
@@ -389,6 +409,7 @@ function findNeighbours(node) {
     left = parseInt(node.name) - 1;
     bottom = parseInt(node.name) + 16;
   }
+
   return {
     top,
     bottom,
@@ -436,11 +457,8 @@ function calcHCost(node) {
 }
 
 function calcGCost(currentNode) {
-  const x1 = mod(parseInt(startNode.name), 16);
-  const y1 = Math.floor(parseInt(startNode.name) / 16);
-  const x2 = mod(parseInt(currentNode), 16);
-  const y2 = Math.floor(parseInt(currentNode) / 16);
-  return Math.abs(y2 - y1) + Math.abs(x2 - x1);
+  if (currentNode.parent == null) return 0;
+  return currentNode.parent.gn + 1;
 }
 
 function calcFCost(currentNode) {
