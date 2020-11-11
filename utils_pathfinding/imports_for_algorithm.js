@@ -6,14 +6,21 @@ import {
 } from "./imports_for_utils.js";
 
 export function drawPath(exploringNodes, startNode, endNode, finalPath) {
-  document.querySelector("#reset_board").disabled = false;
-  document.querySelector("#start_algo").disabled = false;
   let finalNode = exploringNodes.find((node) => node.name == endNode.name);
 
   traversePath(finalNode, "parent", finalPath);
 
-  for (let i = 0; i < finalPath.length; i++)
-    fillPath(startNode, endNode, i, finalPath);
+  for (let i = 0; i < finalPath.length; i++) {
+    fillPath(startNode, endNode, i, finalPath).then((response) => {
+      if (i == finalPath.length - 1) {
+        document.querySelector("#reset_board").disabled = false;
+        document.querySelector("#start_algo").disabled = false;
+        document.querySelectorAll(".grid").forEach((grid) => {
+          grid.disabled = false;
+        });
+      }
+    });
+  }
 }
 
 function checkVisited(node) {

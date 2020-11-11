@@ -13,15 +13,15 @@ export function traversePath(node, key, finalPath) {
 export function fillPath(startNode, endNode, data, finalPath) {
   document.getElementById(startNode.name).classList.add("path");
   document.getElementById(endNode.name).classList.add("path");
-  setTimeout(() => {
-    document.getElementById(finalPath[data]).classList.add("path");
-    document.querySelector("#path-length").innerText = parseInt(data) + 1;
-  }, 200 * data);
 
-  setTimeout(() => {
-    document.querySelector("#reset_board").disabled = false;
-    document.querySelector("#start_algo").disabled = false;
-  }, 3200);
+  let promise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      document.getElementById(finalPath[data]).classList.add("path");
+      document.querySelector("#path-length").innerText = parseInt(data) + 1;
+      resolve();
+    }, 200 * data);
+  });
+  return promise;
 }
 
 export function createBoundry(dimX, dimY) {

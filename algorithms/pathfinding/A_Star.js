@@ -24,6 +24,9 @@ export default function A_Star(startNode, endNode, allNodes, dimX, dimY) {
 
   exploringNodes.push(startNodePtr);
   let animate = setInterval(() => {
+    document
+      .querySelectorAll(".grid")
+      .forEach((grid) => (grid.disabled = true));
     document.querySelector("#reset_board").disabled = true;
     document.querySelector("#start_algo").disabled = true;
 

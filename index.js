@@ -98,7 +98,7 @@ document.querySelector("#start_algo").addEventListener("click", () => {
 });
 
 document.querySelector("#reset_board").addEventListener("click", drawGrid);
-document.querySelector(".overlay").style.visibility = "hidden";
+document.querySelector(".overlay").style.visibility = "visible";
 
 document.querySelector(".help").addEventListener("click", () => {
   document.querySelector(".overlay").style.visibility = "visible";
