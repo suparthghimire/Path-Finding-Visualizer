@@ -6,10 +6,10 @@ let allNodes = [];
 let startNode = null;
 let endNode = null;
 
-let exploringNodes = [];
-let visitedNodes = [];
+// let exploringNodes = [];
+// let visitedNodes = [];
 let finalPath = [];
-let nodeBeingExplored = null;
+
 class Node {
   constructor(name, gn, hn, parent, isEnd, isStart, isObstacle, neighbours) {
     this.name = name;
@@ -22,42 +22,31 @@ class Node {
     this.obstacle = isObstacle;
     this.neighbours = neighbours;
   }
-  calc() {
-    return this.gn + this.hn;
-  }
 }
 
 drawGrid();
 
 function drawGrid() {
-  console.clear();
-  console.log(allNodes);
   allNodes = [];
-  exploringNodes = [];
-  visitedNodes = [];
   finalPath = [];
-  nodeBeingExplored = null;
   totalVisited = 0;
   pathLength = 0;
 
   document.querySelector("#path-length").innerText = pathLength;
   document.querySelector("#visited-nodes").innerText = totalVisited;
 
-  console.log(allNodes);
   document.querySelector("#reset_board").disabled = false;
-  // console.log("allNodes: ", allNodes);
+  document.querySelector("#start_algo").disabled = false;
+  //
   document.querySelector(".grid-container").innerHTML = "";
   let count = 0;
   for (let i = 0; i < dim; i++) {
     for (let j = 0; j < dim; j++) {
       const span = document.createElement("button");
       span.classList.add("grid");
-      span.innerHTML = count;
       span.id = count;
       gridContainer.appendChild(span);
-      allNodes.push(
-        new Node(count, null, null, null, false, false, false, null)
-      );
+      allNodes.push(new Node(count, 0, 0, null, false, false, false, null));
       count++;
     }
   }
@@ -75,12 +64,10 @@ function setStartAndEndNode() {
   document.getElementById(start).classList.add("start");
   startNode = allNodes.find((node) => node.name === start);
   startNode.start = true;
-  console.log("start ", startNode);
 
   document.getElementById(end).classList.add("end");
   endNode = allNodes.find((node) => node.name === end);
   endNode.end = true;
-  console.log("end ", endNode);
 }
 
 gridContainer.addEventListener("click", (e) => {
@@ -98,7 +85,6 @@ gridContainer.addEventListener("click", (e) => {
 
 gridContainer.addEventListener("click", (e) => {
   if (e.target.classList.contains("grid")) {
-    console.log(e.target.id);
     if (e.target.classList.contains("start")) {
       setNewStartLocation(e.target);
     } else if (e.target.classList.contains("end")) {
@@ -172,22 +158,27 @@ function fillPath(data) {
     document.querySelector("#path-length").innerText = pathLength;
   }, 200 * data);
 
-  console.log(allNodes);
+  setTimeout(() => {
+    document.querySelector("#reset_board").disabled = false;
+    document.querySelector("#start_algo").disabled = false;
+  }, 3200);
 }
 
-function drawPath() {
+function drawPath(exploringNodes) {
   document.querySelector("#reset_board").disabled = false;
+  document.querySelector("#start_algo").disabled = false;
 
   let finalNode = exploringNodes.find((node) => node.name == endNode.name);
 
   traversePath(finalNode, "parent");
 
-  console.log(finalPath);
   for (let i = 0; i < finalPath.length; i++) fillPath(i);
+
+  console.log(allNodes);
 }
 
 document.querySelector("#reset_board").addEventListener("click", drawGrid);
-document.querySelector(".overlay").style.visibility = "visible";
+document.querySelector(".overlay").style.visibility = "hidden";
 
 document.querySelector(".help").addEventListener("click", () => {
   document.querySelector(".overlay").style.visibility = "visible";
@@ -198,8 +189,8 @@ document.querySelector("#overlay-close").addEventListener("click", () => {
 });
 // A Star Codes
 function A_Star() {
-  console.log("Start", startNode);
-  console.log("Start", endNode);
+  let exploringNodes = [];
+  let visitedNodes = [];
 
   let startNodePtr = startNode;
 
@@ -208,21 +199,14 @@ function A_Star() {
   startNode.fn = calcFCost(startNode);
 
   exploringNodes.push(startNodePtr);
-  visitedNodes.push(startNodePtr);
-
-  let count = 0;
-
   let animate = setInterval(() => {
     document.querySelector("#reset_board").disabled = true;
+    document.querySelector("#start_algo").disabled = true;
 
     if (startNodePtr.end == true) {
       clearInterval(animate);
-      drawPath();
-      console.log("found");
-      //  break;
+      drawPath(exploringNodes);
     } else {
-      console.log("Start Node ", startNodePtr.name);
-
       let top = allNodes.find(
         (node) => node.name == findNeighbours(startNodePtr).top
       );
@@ -237,10 +221,19 @@ function A_Star() {
       );
 
       startNodePtr.neighbours = [top, right, bottom, left];
+      setParent(top, right, bottom, left, startNodePtr, visitedNodes);
       setGCost(top, right, bottom, left);
       setHCost(top, right, bottom, left);
       setFnCost(top, right, bottom, left);
-      updateExploringList(top, right, left, bottom, startNodePtr);
+
+      updateExploringList(
+        top,
+        right,
+        left,
+        bottom,
+        exploringNodes,
+        visitedNodes
+      );
 
       const status = visitedNodes.filter(
         (node) => node.name == startNodePtr.name
@@ -249,10 +242,6 @@ function A_Star() {
 
       exploringNodes.shift();
       exploringNodes.sort((a, b) => a.fn - b.fn);
-      // console.log("top.name: ", top != null ? top.name : "");
-      // console.log("right.name: ", right != null ? right.name : "");
-      // console.log("bottom.name: ", bottom != null ? bottom.name : "");
-      // console.log("left.name: ", left != null ? left.name : "");
 
       for (let j = exploringNodes.length - 1; j--; ) {
         if (exploringNodes[j].obstacle == true) {
@@ -260,48 +249,71 @@ function A_Star() {
         }
       }
 
-      console.log(exploringNodes[0].name);
-
       traverse(startNodePtr.name);
 
       startNodePtr = exploringNodes[0];
       document.querySelector("#visited-nodes").innerText = totalVisited;
       totalVisited++;
-      count++;
     }
   }, 50);
 }
-function checkVisited(node) {
+function checkVisited(node, visitedNodes) {
   return visitedNodes.includes(node) ? true : false;
 }
 
-function updateExploringList(top, right, left, bottom, parent) {
-  if (top != null && !checkVisited(top)) {
+function setParent(top, right, bottom, left, parent, visitedNodes) {
+  if (top != null && !checkVisited(top, visitedNodes)) {
     top.parent = parent;
+  }
+  if (right != null && !checkVisited(right, visitedNodes)) {
+    right.parent = parent;
+  }
+  if (bottom != null && !checkVisited(bottom, visitedNodes)) {
+    bottom.parent = parent;
+  }
+  if (left != null && !checkVisited(left, visitedNodes)) {
+    left.parent = parent;
+  }
+}
+
+function updateExploringList(
+  top,
+  right,
+  left,
+  bottom,
+  exploringNodes,
+  visitedNodes
+) {
+  if (top != null && !checkVisited(top, visitedNodes)) {
+    //
+    // top.parent = parent;
     const status = exploringNodes.filter((node) => node.name === top.name)
       .length;
     if (status == 0) {
       exploringNodes.push(top);
     }
   }
-  if (right != null && !checkVisited(right)) {
-    right.parent = parent;
+  if (right != null && !checkVisited(right, visitedNodes)) {
+    //
+    // right.parent = parent;
     const status = exploringNodes.filter((node) => node.name === right.name)
       .length;
     if (status == 0) {
       exploringNodes.push(right);
     }
   }
-  if (bottom != null && !checkVisited(bottom)) {
-    bottom.parent = parent;
+  if (bottom != null && !checkVisited(bottom, visitedNodes)) {
+    //
+    // bottom.parent = parent;
     const status = exploringNodes.filter((node) => node.name === bottom.name)
       .length;
     if (status == 0) {
       exploringNodes.push(bottom);
     }
   }
-  if (left != null && !checkVisited(left)) {
-    left.parent = parent;
+  if (left != null && !checkVisited(left, visitedNodes)) {
+    //
+    // left.parent = parent;
     const status = exploringNodes.filter((node) => node.name === left.name)
       .length;
     if (status == 0) {
@@ -326,16 +338,20 @@ function setFnCost(top, right, bottom, left) {
 }
 function setGCost(top, right, bottom, left) {
   if (top != undefined) {
-    top.gn = calcGCost(top.name);
+    top.gn = calcGCost(top);
+    // top.gn = currentGCost;
   }
   if (right != undefined) {
-    right.gn = calcGCost(right.name);
+    right.gn = calcGCost(right);
+    // right.gn = currentGCost;
   }
   if (bottom != undefined) {
-    bottom.gn = calcGCost(bottom.name);
+    bottom.gn = calcGCost(bottom);
+    // bottom.gn = currentGCost;
   }
   if (left != undefined) {
-    left.gn = calcGCost(left.name);
+    left.gn = calcGCost(left);
+    // left.gn = currentGCost;
   }
 }
 function setHCost(top, right, bottom, left) {
@@ -359,7 +375,7 @@ function isObstacle(node) {
 }
 
 function findNeighbours(node) {
-  // console.log("Node to find Neigh of: ", node.name);
+  //
   let left, right, top, bottom;
   if (parseInt(node.name) == 0) {
     top = null;
@@ -455,11 +471,8 @@ function calcHCost(node) {
 }
 
 function calcGCost(currentNode) {
-  if (currentNode.parent == null) {
-    return 0;
-  } else {
-    return currentNode.parent.gn + 1;
-  }
+  if (currentNode.parent == null) return 0;
+  return currentNode.parent.gn + 1;
 }
 
 function calcFCost(currentNode) {
@@ -473,15 +486,12 @@ document.querySelector("#start_algo").addEventListener("click", () => {
       grid.classList.contains("traverse") ||
       grid.classList.contains("path")
     ) {
-      console.log("true");
       status = true;
-    } else {
-      status = false;
     }
   });
+  console.log(status);
   if (status) {
     drawGrid();
-    // A_Star();
   } else {
     A_Star();
   }
