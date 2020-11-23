@@ -26,7 +26,6 @@ export function drawPath(exploringNodes, startNode, endNode, finalPath) {
 function checkVisited(node) {
   return node.isVisited ? true : false;
 }
-
 export function setParent(top, right, bottom, left, parent) {
   if (top != null && !checkVisited(top)) {
     top.parent = parent;

@@ -23,6 +23,8 @@ export default function A_Star(startNode, endNode, allNodes, dimX, dimY) {
   startNode.fn = calcFCost(startNode);
 
   exploringNodes.push(startNodePtr);
+  let count = 0;
+
   let animate = setInterval(() => {
     document
       .querySelectorAll(".grid")
@@ -33,6 +35,8 @@ export default function A_Star(startNode, endNode, allNodes, dimX, dimY) {
     if (startNodePtr.end == true) {
       clearInterval(animate);
       drawPath(exploringNodes, startNode, endNode, finalPath);
+    } else if (count == allNodes.length) {
+      clearInterval(animate);
     } else {
       let top = allNodes.find(
         (node) => node.name == findNeighbours(startNodePtr, dimX, dimY).top

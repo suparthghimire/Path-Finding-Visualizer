@@ -1,9 +1,9 @@
 import Node from "./models/Node.js";
 import A_Star from "./algorithms/pathfinding/A_Star.js";
-
+import BinaryTreeMaze from "./algorithms/mazeGeneration/BinaryTreeMaze.js";
 const gridContainer = document.querySelector(".grid-container");
-const dimX = 40;
-const dimY = 10;
+const dimX = 16;
+const dimY = 16;
 let allNodes = [];
 let startNode = null;
 let endNode = null;
@@ -98,7 +98,7 @@ document.querySelector("#start_algo").addEventListener("click", () => {
 });
 
 document.querySelector("#reset_board").addEventListener("click", drawGrid);
-document.querySelector(".overlay").style.visibility = "visible";
+document.querySelector(".overlay").style.visibility = "hidden";
 
 document.querySelector(".help").addEventListener("click", () => {
   document.querySelector(".overlay").style.visibility = "visible";
@@ -225,3 +225,7 @@ function dragAndDrop() {
     false
   );
 }
+
+document.getElementById("generate_maze").addEventListener("click", () => {
+  BinaryTreeMaze(dimX, dimY, allNodes);
+});

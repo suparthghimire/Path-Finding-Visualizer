@@ -127,8 +127,8 @@ body {
 }
 
 .grid-container {
-    --noX: 40;
-    --noY: 10;
+    --noX: 16;
+    --noY: 16;
     --size: 30px;
     display: grid;
     grid-gap: 8px;
