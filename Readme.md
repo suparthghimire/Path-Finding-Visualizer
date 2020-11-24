@@ -8,6 +8,6 @@ _**Breadth First Srarch**
 
 ## Completed Algorithms:
 
-\***A-STAR**
+**A-STAR**
 
 [Live Demo](https://suparth-a-star-visualizer.netlify.app/)
