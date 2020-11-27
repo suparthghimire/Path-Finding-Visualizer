@@ -14,7 +14,9 @@ export function drawPath(exploringNodes, startNode, endNode, finalPath) {
     fillPath(startNode, endNode, i, finalPath).then((response) => {
       if (i == finalPath.length - 1) {
         document.querySelector("#reset_board").disabled = false;
-        document.querySelector("#start_algo").disabled = false;
+        document.querySelector("#start_a_star").disabled = false;
+        document.querySelector("#start_dijkstra").disabled = false;
+        document.querySelector("#generate_maze").disabled = false;
         document.querySelectorAll(".grid").forEach((grid) => {
           grid.disabled = false;
         });

@@ -1,5 +1,6 @@
 import Node from "./models/Node.js";
 import A_Star from "./algorithms/pathfinding/A_Star.js";
+import Dijkstra from "./algorithms/pathfinding/dijkstra.js";
 import BinaryTreeMaze from "./algorithms/mazeGeneration/BinaryTreeMaze.js";
 const gridContainer = document.querySelector(".grid-container");
 const dimX = 16;
@@ -17,7 +18,7 @@ function drawGrid() {
   document.querySelector("#visited-nodes").innerText = 0;
 
   document.querySelector("#reset_board").disabled = false;
-  document.querySelector("#start_algo").disabled = false;
+  document.querySelector("#start_a_star").disabled = false;
   //
   document.querySelector(".grid-container").innerHTML = "";
   let count = 0;
@@ -79,23 +80,6 @@ gridContainer.addEventListener("click", (e) => {
 });
 
 //
-
-document.querySelector("#start_algo").addEventListener("click", () => {
-  let status = false;
-  document.querySelectorAll(".grid").forEach((grid) => {
-    if (
-      grid.classList.contains("traverse") ||
-      grid.classList.contains("path")
-    ) {
-      status = true;
-    }
-  });
-  if (status) {
-    drawGrid();
-  } else {
-    A_Star(startNode, endNode, allNodes, dimX, dimY);
-  }
-});
 
 document.querySelector("#reset_board").addEventListener("click", drawGrid);
 document.querySelector(".overlay").style.visibility = "hidden";
@@ -227,5 +211,53 @@ function dragAndDrop() {
 }
 
 document.getElementById("generate_maze").addEventListener("click", () => {
-  BinaryTreeMaze(dimX, dimY, allNodes);
+  let status = false;
+  document.querySelectorAll(".grid").forEach((grid) => {
+    if (
+      grid.classList.contains("traverse") ||
+      grid.classList.contains("path") ||
+      grid.classList.contains("obstacle")
+    ) {
+      status = true;
+    }
+  });
+  if (status) {
+    drawGrid();
+  } else {
+    BinaryTreeMaze(dimX, dimY, allNodes);
+  }
+});
+
+document.querySelector("#start_a_star").addEventListener("click", () => {
+  let status = false;
+  document.querySelectorAll(".grid").forEach((grid) => {
+    if (
+      grid.classList.contains("traverse") ||
+      grid.classList.contains("path")
+    ) {
+      status = true;
+    }
+  });
+  if (status) {
+    drawGrid();
+  } else {
+    A_Star(startNode, endNode, allNodes, dimX, dimY);
+  }
+});
+
+document.querySelector("#start_dijkstra").addEventListener("click", () => {
+  let status = false;
+  document.querySelectorAll(".grid").forEach((grid) => {
+    if (
+      grid.classList.contains("traverse") ||
+      grid.classList.contains("path")
+    ) {
+      status = true;
+    }
+  });
+  if (status) {
+    drawGrid();
+  } else {
+    Dijkstra(startNode, endNode, allNodes, dimX, dimY);
+  }
 });

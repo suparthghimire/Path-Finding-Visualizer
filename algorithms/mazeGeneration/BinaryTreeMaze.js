@@ -1,7 +1,8 @@
 import { findNeighbours } from "../../utils_pathfinding/imports_for_algorithm.js";
 export default function BinaryTreeMaze(dimX, dimY, allNodes) {
   let count = 0;
-  document.querySelector("#start_algo").disabled = true;
+  document.querySelector("#start_a_star").disabled = true;
+  document.querySelector("#start_dijkstra").disabled = true;
   document.querySelector("#reset_board").disabled = true;
   document.querySelector("#generate_maze").disabled = true;
   let mazeAnimate = setInterval(() => {
@@ -21,7 +22,8 @@ export default function BinaryTreeMaze(dimX, dimY, allNodes) {
       );
 
       fillWall(choosenNode).then((data) => {
-        document.querySelector("#start_algo").disabled = false;
+        document.querySelector("#start_a_star").disabled = false;
+        document.querySelector("#start_dijkstra").disabled = false;
         document.querySelector("#reset_board").disabled = false;
         document.querySelector("#generate_maze").disabled = false;
       });
