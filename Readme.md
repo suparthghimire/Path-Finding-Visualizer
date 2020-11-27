@@ -4,6 +4,6 @@ This Project is meant to visualize populat Path Finding Visualizing Algorithms: 
 
 ## Completed Algorithms:
 
--**A-STAR**
+-**A-STAR** -**Dijkstra**
 
 [Live Demo](https://suparth-a-star-visualizer.netlify.app/)
