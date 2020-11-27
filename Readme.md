@@ -1,6 +1,6 @@
 # Path Finding Visualization
 
-This Project is meant to visualize populat Path Finding Visualizing Algorithms: -**Dijkstra** -**A-Star** -**Depth First Search** -**Breadth First Srarch**
+This Project is meant to visualize popular Path Finding Visualizing Algorithms: -**Dijkstra** -**A-Star** -**Depth First Search** -**Breadth First Srarch**
 
 ## Completed Algorithms:
 
